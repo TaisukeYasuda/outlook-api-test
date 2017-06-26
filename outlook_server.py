@@ -33,10 +33,6 @@ graph_endpoint = 'https://graph.microsoft.com/v1.0{0}'
 
 @app.route("/")
 def hello():
-    return render_template('home.html')
-
-@app.route("/outlook_login")
-def outlook_login():
     return redirect(authorization_url)
 
 def query(route, token):
