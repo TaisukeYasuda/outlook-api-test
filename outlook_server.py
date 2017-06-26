@@ -6,6 +6,8 @@ import requests
 import requests.auth
 from requests_oauthlib import OAuth2Session
 import json
+import threading
+import time
 
 from flask import Flask
 from flask import render_template
@@ -37,6 +39,14 @@ def hello():
 def outlook_login():
     return redirect(authorization_url)
 
+def query(route, token):
+    headers = {
+        "Authorization": "Bearer {0}".format(token['access_token']),
+        "Content-Type": "application/json"
+    }
+    o = requests.get(graph_endpoint.format(route), headers=headers)
+    return o.content
+
 @app.route("/gettoken")
 def gettoken():
     code = request.args.get('code')
@@ -54,18 +64,24 @@ def gettoken():
                              auth=client_auth,
                              data=post_data)
     token = response.json()
-    token = token['access_token']
-    return render_template("logged_in.html", token=token)
+    print(query('/me', token))
+    print(query('/me/events', token))
+    return render_template("logged_in.html")
 
-if __name__ == '__main__':
-      app.run(host='0.0.0.0', port=8000)
+URL = 'http://localhost:8000'
 
+def start_browser():
+    print("[Browser Thread] waiting for server to start")
+    while True:
+        try:
+            urllib.request.urlopen(url=URL)
+            break
+        except Exception as e:
+            print(e)
+            time.sleep(0.5)
+    print("[Browser Thread] opening browser")
+    webbrowser.open(URL)
 
-def query(route):
-    headers = {
-        "Authorization": "Bearer {0}".format(token['access_token']),
-        "Content-Type": "application/json"
-    }
-    o = requests.get(self.graph_endpoint.format(route), headers=headers)
-    return o.content
+threading.Thread(target=start_browser).start()
 
+app.run(host='localhost', port=8000)
